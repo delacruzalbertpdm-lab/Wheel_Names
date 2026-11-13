@@ -20,6 +20,8 @@ __pycache__/
 *.sqlite3
 db.sqlite3
 backend/db.sqlite3
+staticfiles/
+backend/staticfiles/
 
 # Logs
 npm-debug.log*
