@@ -2,7 +2,7 @@
  * Clean REST API HTTP client decoupled from backend implementation details.
  */
 
-const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL || 'http://127.0.0.1:8000/api').replace(/\/$/, '');
+const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL || '/api').replace(/\/$/, '');
 
 export class ApiError extends Error {
   constructor(message, status, data = null) {
