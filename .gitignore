@@ -2,11 +2,6 @@
 node_modules/
 */node_modules/
 
-# Production / Build output
-dist/
-frontend/dist/
-build/
-
 # Environment variables
 .env
 *.env
