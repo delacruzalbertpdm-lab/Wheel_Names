@@ -1,0 +1,64 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    background-color: #F8FAFC;
+    color: #0F172A;
+    font-family: 'Plus Jakarta Sans', Inter, system-ui, sans-serif;
+    overflow-x: hidden;
+  }
+}
+
+/* Custom Animations for Digital Spotlight Matrix & Simultaneous Winner Cards */
+@keyframes spotlightPulse {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.35), 0 10px 25px -5px rgba(16, 185, 129, 0.35);
+  }
+  50% {
+    box-shadow: 0 0 0 6px rgba(16, 185, 129, 0.2), 0 15px 35px -5px rgba(16, 185, 129, 0.5);
+  }
+}
+
+@keyframes cardRevealUp {
+  0% {
+    opacity: 0;
+    transform: translateY(28px) scale(0.92) rotateX(12deg);
+  }
+  65% {
+    opacity: 1;
+    transform: translateY(-4px) scale(1.02) rotateX(0deg);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1) rotateX(0deg);
+  }
+}
+
+.animate-card-reveal {
+  animation: cardRevealUp 0.65s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.animate-spotlight-lock {
+  animation: spotlightPulse 1.2s ease-in-out infinite;
+}
+
+/* Clean light scrollbars */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #F1F5F9;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #CBD5E1;
+  border-radius: 9999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #94A3B8;
+}
