@@ -111,11 +111,10 @@ export default function DashboardPage() {
                     onClick={() =>
                       setDrawConfig((prev) => ({ ...prev, requestedCount: count }))
                     }
-                    className={`py-2 rounded-xl font-mono text-xs font-bold border transition-all ${
-                      drawConfig.requestedCount === count
+                    className={`py-2 rounded-xl font-mono text-xs font-bold border transition-all ${drawConfig.requestedCount === count
                         ? 'bg-indigo-600 text-white border-indigo-600 shadow-sm'
                         : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100'
-                    }`}
+                      }`}
                   >
                     {count}
                   </button>
