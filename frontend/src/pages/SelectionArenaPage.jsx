@@ -22,9 +22,6 @@ import { fetchParticipants } from '../api/participantsApi';
 import { executeRandomDraw } from '../api/drawsApi';
 import { usePulseDraw } from '../context/PulseDrawContext';
 import {
-  initYouTubeChoosingSound,
-  startYouTubeChoosingSound,
-  stopYouTubeChoosingSound,
   playScanTick,
   playTargetLockSound,
   playWinnerRevealFanfare,
@@ -58,9 +55,6 @@ export default function SelectionArenaPage() {
     setSoundEnabled((prev) => {
       const next = !prev;
       soundEnabledRef.current = next;
-      if (!next) {
-        stopYouTubeChoosingSound();
-      }
       return next;
     });
   }, []);
@@ -80,10 +74,8 @@ export default function SelectionArenaPage() {
   }, []);
 
   useEffect(() => {
-    initYouTubeChoosingSound('wKw0pvc1HiE');
     return () => {
       clearAllTimers();
-      stopYouTubeChoosingSound();
     };
   }, [clearAllTimers]);
 
@@ -195,12 +187,6 @@ export default function SelectionArenaPage() {
     setScanProgress(5);
     setStageState('scanning');
 
-    // Start playing https://www.youtube.com/watch?v=wKw0pvc1HiE immediately on user click
-    let ytStarted = false;
-    if (soundEnabledRef.current) {
-      ytStarted = startYouTubeChoosingSound();
-    }
-
     const idempotencyKey = `draw-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
 
     // 1. Request cryptographic random selection from the Django backend
@@ -216,7 +202,6 @@ export default function SelectionArenaPage() {
       setStageState('idle');
       setScanProgress(0);
       setActiveSpotlightIds([]);
-      stopYouTubeChoosingSound();
       addToast(err.message || 'Draw execution failed.', 'error');
       return;
     }
@@ -225,11 +210,11 @@ export default function SelectionArenaPage() {
     const winnerIds = (drawSession.winners || []).map((w) => w.participant_id);
     const eligibleIds = eligibleParticipants.map((p) => p.id);
 
-    // 2. Choreograph the Spotlight Matrix scan synced to the YouTube choosing audio (~4.5s scan + lock + reveal)
-    const totalSteps = 32;
-    const stepDurationMs = 140;
+    // 2. Choreograph the Spotlight Matrix scan with digital audio ticks (~3.5s scan + lock + reveal)
+    const totalSteps = 24;
+    const stepDurationMs = 135;
 
-    if (soundEnabledRef.current && !ytStarted) {
+    if (soundEnabledRef.current) {
       playScanTick(1, totalSteps);
     }
 
@@ -238,7 +223,7 @@ export default function SelectionArenaPage() {
         setScanProgress(Math.round((step / totalSteps) * 100));
         const shuffled = [...eligibleIds].sort(() => 0.5 - Math.random());
         setActiveSpotlightIds(shuffled.slice(0, Math.min(requested, eligibleIds.length)));
-        if (soundEnabledRef.current && !ytStarted) {
+        if (soundEnabledRef.current) {
           playScanTick(step, totalSteps);
         }
       }, step * stepDurationMs);

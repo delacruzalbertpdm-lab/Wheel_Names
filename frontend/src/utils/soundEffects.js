@@ -1,16 +1,10 @@
 /**
- * Studio-grade Audio & YouTube Sound Engine for PulseDraw.
- * Plays https://www.youtube.com/watch?v=wKw0pvc1HiE ("MAY NANALO NA!.... SOUND EFFECTS!")
- * during the player selection process via the official YouTube IFrame Player API,
- * with Web Audio API synthesizer fallback and celebratory fanfare.
+ * Pure Web Audio API Sound Engine for PulseDraw.
+ * 100% client-side, zero network calls, zero tracking, no external iframe/adblock blocks.
+ * Provides crisp digital audio effects for scanning, locking, and celebratory fanfare.
  */
 
-const DEFAULT_YOUTUBE_VIDEO_ID = 'wKw0pvc1HiE';
-
 let audioCtx = null;
-let ytPlayer = null;
-let ytReady = false;
-let ytPendingPlay = false;
 
 function getAudioContext() {
   if (typeof window === 'undefined') return null;
@@ -27,136 +21,17 @@ function getAudioContext() {
 }
 
 /**
- * Preloads the hidden YouTube IFrame Player for `wKw0pvc1HiE` so that clicking
- * "Start Selection" plays the exact YouTube audio immediately.
+ * Crisp futuristic spotlight scan tick during player selection.
+ * Frequencies smoothly rise as the selection accelerates.
  */
-export function initYouTubeChoosingSound(videoId = DEFAULT_YOUTUBE_VIDEO_ID) {
-  if (typeof window === 'undefined' || typeof document === 'undefined') return;
-
-  // Ensure hidden container exists
-  let container = document.getElementById('pulsedraw-yt-audio-container');
-  if (!container) {
-    container = document.createElement('div');
-    container.id = 'pulsedraw-yt-audio-container';
-    container.style.position = 'fixed';
-    container.style.bottom = '0';
-    container.style.left = '0';
-    container.style.width = '1px';
-    container.style.height = '1px';
-    container.style.opacity = '0.01';
-    container.style.pointerEvents = 'none';
-    container.style.zIndex = '-1';
-    const playerDiv = document.createElement('div');
-    playerDiv.id = 'pulsedraw-yt-player';
-    container.appendChild(playerDiv);
-    document.body.appendChild(container);
-  }
-
-  const createPlayer = () => {
-    if (ytPlayer || !window.YT || !window.YT.Player) return;
-    ytPlayer = new window.YT.Player('pulsedraw-yt-player', {
-      height: '1',
-      width: '1',
-      videoId,
-      playerVars: {
-        autoplay: 0,
-        controls: 0,
-        disablekb: 1,
-        fs: 0,
-        modestbranding: 1,
-        playsinline: 1,
-        rel: 0,
-      },
-      events: {
-        onReady: (event) => {
-          ytReady = true;
-          try {
-            event.target.unMute();
-            event.target.setVolume(100);
-            if (ytPendingPlay) {
-              ytPendingPlay = false;
-              event.target.seekTo(0, true);
-              event.target.playVideo();
-            }
-          } catch {
-            // Ignore
-          }
-        },
-      },
-    });
-  };
-
-  if (window.YT && window.YT.Player) {
-    createPlayer();
-  } else {
-    const existingScript = document.getElementById('pulsedraw-yt-iframe-api');
-    if (!existingScript) {
-      const tag = document.createElement('script');
-      tag.id = 'pulsedraw-yt-iframe-api';
-      tag.src = 'https://www.youtube.com/iframe_api';
-      const firstScriptTag = document.getElementsByTagName('script')[0];
-      if (firstScriptTag && firstScriptTag.parentNode) {
-        firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
-      } else {
-        document.head.appendChild(tag);
-      }
-    }
-
-    const prevCallback = window.onYouTubeIframeAPIReady;
-    window.onYouTubeIframeAPIReady = () => {
-      if (typeof prevCallback === 'function') prevCallback();
-      createPlayer();
-    };
-  }
-}
-
-/**
- * Starts playing the YouTube choosing sound (`https://www.youtube.com/watch?v=wKw0pvc1HiE`)
- * from the beginning. Returns true if the YouTube player was triggered.
- */
-export function startYouTubeChoosingSound() {
-  try {
-    initYouTubeChoosingSound();
-    if (ytPlayer && ytReady && typeof ytPlayer.playVideo === 'function') {
-      ytPlayer.unMute();
-      ytPlayer.setVolume(100);
-      ytPlayer.seekTo(0, true);
-      ytPlayer.playVideo();
-      return true;
-    } else {
-      ytPendingPlay = true;
-      return false;
-    }
-  } catch {
-    return false;
-  }
-}
-
-/**
- * Stops the YouTube choosing sound if needed (e.g. when muting or cancelling).
- */
-export function stopYouTubeChoosingSound() {
-  ytPendingPlay = false;
-  try {
-    if (ytPlayer && ytReady && typeof ytPlayer.stopVideo === 'function') {
-      ytPlayer.stopVideo();
-    }
-  } catch {
-    // Ignore
-  }
-}
-
-/**
- * Fallback crisp digital spotlight tick if YouTube audio is still loading or offline.
- */
-export function playScanTick(step = 1, totalSteps = 16) {
+export function playScanTick(step = 1, totalSteps = 24) {
   try {
     const ctx = getAudioContext();
     if (!ctx) return;
 
     const now = ctx.currentTime;
     const progress = Math.min(1, Math.max(0, step / totalSteps));
-    const baseFreq = 420 + progress * 460;
+    const baseFreq = 420 + progress * 480;
 
     const osc = ctx.createOscillator();
     const gain = ctx.createGain();
@@ -166,7 +41,7 @@ export function playScanTick(step = 1, totalSteps = 16) {
     osc.frequency.exponentialRampToValueAtTime(baseFreq * 1.18, now + 0.065);
 
     gain.gain.setValueAtTime(0.001, now);
-    gain.gain.linearRampToValueAtTime(0.1, now + 0.008);
+    gain.gain.linearRampToValueAtTime(0.12, now + 0.008);
     gain.gain.exponentialRampToValueAtTime(0.001, now + 0.075);
 
     osc.connect(gain);
@@ -175,12 +50,12 @@ export function playScanTick(step = 1, totalSteps = 16) {
     osc.start(now);
     osc.stop(now + 0.08);
   } catch {
-    // Ignore
+    // AudioContext silenced or not permitted yet
   }
 }
 
 /**
- * Plays a high-tech target lock-on double-chime when the spotlights lock onto the winners.
+ * High-tech target lock-on double-chime when spotlights lock onto the selected winners.
  */
 export function playTargetLockSound() {
   try {
@@ -201,7 +76,7 @@ export function playTargetLockSound() {
       osc.frequency.setValueAtTime(freq, now + offset);
 
       gain.gain.setValueAtTime(0.001, now + offset);
-      gain.gain.linearRampToValueAtTime(0.2, now + offset + 0.015);
+      gain.gain.linearRampToValueAtTime(0.22, now + offset + 0.015);
       gain.gain.exponentialRampToValueAtTime(0.001, now + offset + duration);
 
       osc.connect(gain);
@@ -216,8 +91,8 @@ export function playTargetLockSound() {
 }
 
 /**
- * Plays an exciting celebratory fanfare arpeggio + sustained major chord
- * when all selected players are simultaneously revealed on stage.
+ * Triumphant celebratory fanfare arpeggio + sustained major chord
+ * when selected winners are simultaneously revealed on stage.
  */
 export function playWinnerRevealFanfare() {
   try {
@@ -227,10 +102,10 @@ export function playWinnerRevealFanfare() {
     const now = ctx.currentTime;
 
     const arpeggio = [
-      { freq: 523.25, start: 0.0, duration: 0.22, type: 'triangle', vol: 0.22 }, // C5
-      { freq: 659.25, start: 0.09, duration: 0.22, type: 'triangle', vol: 0.22 }, // E5
-      { freq: 783.99, start: 0.18, duration: 0.25, type: 'triangle', vol: 0.24 }, // G5
-      { freq: 1046.5, start: 0.28, duration: 0.85, type: 'triangle', vol: 0.28 }, // C6
+      { freq: 523.25, start: 0.0, duration: 0.22, type: 'triangle', vol: 0.25 }, // C5
+      { freq: 659.25, start: 0.09, duration: 0.22, type: 'triangle', vol: 0.25 }, // E5
+      { freq: 783.99, start: 0.18, duration: 0.25, type: 'triangle', vol: 0.28 }, // G5
+      { freq: 1046.5, start: 0.28, duration: 0.95, type: 'triangle', vol: 0.32 }, // C6
     ];
 
     arpeggio.forEach(({ freq, start, duration, type, vol }) => {
@@ -259,16 +134,16 @@ export function playWinnerRevealFanfare() {
       osc.type = 'sine';
       osc.frequency.setValueAtTime(freq, now + 0.28);
 
-      const peakVol = idx === 0 ? 0.14 : 0.09;
+      const peakVol = idx === 0 ? 0.16 : 0.10;
       gain.gain.setValueAtTime(0.001, now + 0.28);
       gain.gain.linearRampToValueAtTime(peakVol, now + 0.35);
-      gain.gain.exponentialRampToValueAtTime(0.0008, now + 1.45);
+      gain.gain.exponentialRampToValueAtTime(0.0008, now + 1.55);
 
       osc.connect(gain);
       gain.connect(ctx.destination);
 
       osc.start(now + 0.28);
-      osc.stop(now + 1.5);
+      osc.stop(now + 1.6);
     });
   } catch {
     // Ignore
